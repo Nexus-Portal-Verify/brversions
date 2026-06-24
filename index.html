@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Android Version Filter Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f3f7;
+            color: #3a4750;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: #f0f3f7;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* 3D Button Grid Container */
+        .filter-section {
+            background: #ebf0f6;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
+            margin-bottom: 30px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+        }
+
+        /* Premium 3D Neumorphic Button Style */
+        .btn-3d {
+            background: #f0f3f7;
+            border: none;
+            padding: 12px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #4a5568;
+            border-radius: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+            box-shadow: 5px 5px 10px #cfd7e3, -5px -5px 10px #ffffff;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .btn-3d:hover {
+            color: #1a202c;
+            transform: translateY(-2px);
+            box-shadow: 7px 7px 14px #c2cbdc, -7px -7px 14px #ffffff;
+        }
+
+        .btn-3d:active, .btn-3d.active {
+            transform: translateY(1px);
+            box-shadow: inset 3px 3px 6px #cfd7e3, inset -3px -3px 6px #ffffff;
+            color: #2b6cb0;
+            background: #e6fffa;
+            border-color: rgba(43, 108, 176, 0.2);
+        }
+
+        /* Content List Section */
+        .results-section {
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .version-count {
+            font-size: 12px;
+            background: #2b6cb0;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        /* 3D Premium Card for Version List */
+        .version-card {
+            background: #f0f3f7;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            box-shadow: 4px 4px 8px #d1d9e6, -4px -4px 8px #ffffff;
+            border: 1px solid rgba(255,255,255,0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .version-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 6px 6px 12px #c2cbdc, -6px -6px 12px #ffffff;
+            background: #ffffff;
+            color: #2b6cb0;
+        }
+
+        .version-card:active {
+            transform: translateY(0);
+            box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff;
+        }
+
+        /* Copy Feedback Flash Animation */
+        .version-card.copied-flash {
+            background: #cef7e4 !important;
+            border-color: #a3e2c1 !important;
+            color: #1c7447 !important;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            background: #2d3748;
+            color: #ffffff;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Chrome Android Version Engine</h1>
+            <p>Select a major release to view and copy specific engine builds</p>
+        </header>
+
+        <div class="filter-section">
+            <div class="button-grid" id="buttonGrid">
+                </div>
+        </div>
+
+        <div class="results-section">
+            <div class="section-title">
+                <span id="currentSelectionTitle">Select a Version</span>
+                <span class="version-count" id="versionCount" style="display: none;">0 Items</span>
+            </div>
+            <div class="version-grid" id="versionGrid">
+                <div class="empty-state"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastNotification">Version copied to clipboard!</div>
+
+    <script>
+        // Dynamically structured data parsed directly from your system lists
+        const chromeVersionsData = {
+            "150": ["150.0.7871.28"],
+            "149": [
+                "149.0.7827.197", "149.0.7827.160", "149.0.7827.196", 
+                "149.0.7827.116", "149.0.7827.159", "149.0.7827.115", 
+                "149.0.7827.114", "149.0.7827.103", "149.0.7827.60", 
+                "149.0.7827.102", "149.0.7827.59"
+            ],
+            "148": [
+                "148.0.7778.179", "148.0.7778.178", "148.0.7778.168", 
+                "148.0.7778.167", "148.0.7778.121", "148.0.7778.120", 
+                "148.0.7778.96", "148.0.7778.60", "148.0.7778.49"
+            ],
+            "147": [
+                "147.0.7727.138", "147.0.7727.114", "147.0.7727.137", 
+                "147.0.7727.113", "147.0.7727.112", "147.0.7727.103", 
+                "147.0.7727.111", "147.0.7727.102", "147.0.7727.50", 
+                "147.0.7727.101", "147.0.7727.49", "147.0.7727.24"
+            ],
+            "146": [
+                "146.0.7680.178", "146.0.7680.177", "146.0.7680.166", 
+                "146.0.7680.165", "146.0.7680.164", "146.0.7680.154", 
+                "146.0.7680.153", "146.0.7680.120", "146.0.7680.119", 
+                "146.0.7680.116", "146.0.7680.115", "146.0.7680.112", 
+                "146.0.7680.111", "146.0.7680.65", "146.0.7680.31"
+            ],
+            "145": [
+                "145.0.7632.161", "145.0.7632.160", "145.0.7632.159", 
+                "145.0.7632.122", "145.0.7632.121", "145.0.7632.120", 
+                "145.0.7632.110", "145.0.7632.76", "145.0.7632.109", 
+                "145.0.7632.75", "145.0.7632.46", "145.0.7632.45", 
+                "145.0.7632.26"
+            ],
+            "144": [
+                "144.0.7559.133", "144.0.7559.132", "144.0.7559.111", 
+                "144.0.7559.110", "144.0.7559.91", "144.0.7559.109", 
+                "144.0.7559.90", "144.0.7559.77", "144.0.7559.76", 
+                "144.0.7559.59"
+            ],
+            "143": [
+                "143.0.7499.194", "143.0.7499.193", "143.0.7499.192", 
+                "143.0.7499.147", "143.0.7499.146", "143.0.7499.110", 
+                "143.0.7499.53", "143.0.7499.109", "143.0.7499.52", 
+                "143.0.7499.34"
+            ],
+            "142": [
+                "142.0.7444.173", "142.0.7444.172", "142.0.7444.171", 
+                "142.0.7444.159", "142.0.7444.158", "142.0.7444.139", 
+                "142.0.7444.49", "142.0.7444.138", "142.0.7444.48"
+            ],
+            "141": [
+                "141.0.7390.123", "141.0.7390.122", "141.0.7390.112", 
+                "141.0.7390.71", "141.0.7390.111", "141.0.7390.70", 
+                "141.0.7390.44", "141.0.7390.43"
+            ],
+            "140": [
+                "140.0.7339.208", "140.0.7339.207", "140.0.7339.156", 
+                "140.0.7339.155", "140.0.7339.124", "140.0.7339.52", 
+                "140.0.7339.123", "140.0.7339.51", "140.0.7339.35"
+            ],
+            "139": [
+                "139.0.7258.160", "139.0.7258.159", "139.0.7258.158", 
+                "139.0.7258.144", "139.0.7258.143", "139.0.7258.124", 
+                "139.0.7258.63", "139.0.7258.123", "139.0.7258.62"
+            ],
+            "138": [
+                "138.0.7204.180", "138.0.7204.179", "138.0.7204.169", 
+                "138.0.7204.168", "138.0.7204.158", "138.0.7204.64", 
+                "138.0.7204.157", "138.0.7204.63", "138.0.7204.46", 
+                "138.0.7204.45", "138.0.7204.35"
+            ],
+            "137": [
+                "137.0.7151.117", "137.0.7151.116", "137.0.7151.90", 
+                "137.0.7151.115", "137.0.7151.89", "137.0.7151.73", 
+                "137.0.7151.72", "137.0.7151.62", "137.0.7151.61", 
+                "137.0.7151.44"
+            ],
+            "136": [
+                "136.0.7103.127", "136.0.7103.126", "136.0.7103.88", 
+                "136.0.7103.125", "136.0.7103.87", "136.0.7103.61", 
+                "136.0.7103.60", "136.0.7103.44"
+            ],
+            "135": [
+                "135.0.7049.113", "135.0.7049.112", "135.0.7049.111", 
+                "135.0.7049.101", "135.0.7049.80", "135.0.7049.100", 
+                "135.0.7049.79", "135.0.7049.39", "135.0.7049.38"
+            ],
+            "134": [
+                "134.0.6998.136", "134.0.6998.135", "134.0.6998.109", 
+                "134.0.6998.96", "134.0.6998.108", "134.0.6998.95", 
+                "134.0.6998.39"
+            ],
+            "133": [
+                "133.0.6943.138", "133.0.6943.137", "133.0.6943.122", 
+                "133.0.6943.51", "133.0.6943.121", "133.0.6943.89", 
+                "133.0.6943.50", "133.0.6943.49", "133.0.6943.39"
+            ],
+            "132": [
+                "132.0.6834.165", "132.0.6834.164", "132.0.6834.163", 
+                "132.0.6834.123", "132.0.6834.80", "132.0.6834.122", 
+                "132.0.6834.79"
+            ],
+            "131": [
+                "131.0.6778.261", "131.0.6778.202", "131.0.6778.260", 
+                "131.0.6778.201", "131.0.6778.200", "131.0.6778.136", 
+                "131.0.6778.135", "131.0.6778.105", "131.0.6778.82", 
+                "131.0.6778.104", "131.0.6778.81", "131.0.6778.40", 
+                "131.0.6778.39"
+            ],
+            "130": [
+                "130.0.6723.103", "130.0.6723.87", "130.0.6723.102", 
+                "130.0.6723.86", "130.0.6723.74", "130.0.6723.73", 
+                "130.0.6723.59", "130.0.6723.58", "130.0.6723.40"
+            ],
+            "129": [
+                "129.0.6668.102", "129.0.6668.101", "129.0.6668.82", 
+                "129.0.6668.100", "129.0.6668.81", "129.0.6668.71", 
+                "129.0.6668.70", "129.0.6668.54", "129.0.6668.38"
+            ],
+            "128": [
+                "128.0.6613.148", "128.0.6613.147", "128.0.6613.129", 
+                "128.0.6613.146", "128.0.6613.128", "128.0.6613.127", 
+                "128.0.6613.100", "128.0.6613.99", "128.0.6613.88", 
+                "128.0.6613.40"
+            ],
+            "127": [
+                "127.0.6533.106", "127.0.6533.105", "127.0.6533.104", 
+                "127.0.6533.85", "127.0.6533.103", "127.0.6533.84", 
+                "127.0.6533.65", "127.0.6533.64"
+            ]
+        };
+
+        const buttonGrid = document.getElementById('buttonGrid');
+        const versionGrid = document.getElementById('versionGrid');
+        const currentSelectionTitle = document.getElementById('currentSelectionTitle');
+        const versionCount = document.getElementById('versionCount');
+        const toast = document.getElementById('toastNotification');
+
+        // Render 3D Navigation Buttons Sorted DESC
+        const sortedMajors = Object.keys(chromeVersionsData).sort((a, b) => b - a);
+        
+        sortedMajors.forEach(major => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-3d';
+            btn.textContent = major;
+            btn.addEventListener('click', () => {
+                // Toggle active state
+                document.querySelectorAll('.btn-3d').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Load targeted versions
+                displayVersions(major);
+            });
+            buttonGrid.appendChild(btn);
+        });
+
+        // Function to display the dynamic list
+        function displayVersions(majorKey) {
+            versionGrid.innerHTML = '';
+            const list = chromeVersionsData[majorKey] || [];
+            
+            currentSelectionTitle.textContent = `Chrome v${majorKey} Releases`;
+            versionCount.textContent = `${list.length} Builds`;
+            versionCount.style.display = 'inline-block';
+
+            list.forEach(versionStr => {
+                const card = document.createElement('div');
+                card.className = 'version-card';
+                card.textContent = versionStr;
+                
+                // One-click dynamic copy engine
+                card.addEventListener('click', () => {
+                    navigator.clipboard.writeText(versionStr).then(() => {
+                        showToast(`Copied: ${versionStr}`);
+                        
+                        // Small success micro-animation
+                        card.classList.add('copied-flash');
+                        setTimeout(() => card.classList.remove('copied-flash'), 400);
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                    });
+                });
+
+                versionGrid.appendChild(card);
+            });
+        }
+
+        // Standard custom Toast trigger
+        let toastTimeout;
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
