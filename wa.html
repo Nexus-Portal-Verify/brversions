@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Version Filter Tool (Chrome Engine Based)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f3f7;
+            color: #3a4750;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: #f0f3f7;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 12px 12px 24px #d1d9e6, -12px -12px 24px #ffffff;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .filter-section {
+            background: #ebf0f6;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
+            margin-bottom: 30px;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 15px;
+        }
+
+        .btn-3d {
+            background: #f0f3f7;
+            border: none;
+            padding: 12px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #4a5568;
+            border-radius: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+            box-shadow: 5px 5px 10px #cfd7e3, -5px -5px 10px #ffffff;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .btn-3d:hover {
+            color: #1a202c;
+            transform: translateY(-2px);
+            box-shadow: 7px 7px 14px #c2cbdc, -7px -7px 14px #ffffff;
+        }
+
+        .btn-3d:active, .btn-3d.active {
+            transform: translateY(1px);
+            box-shadow: inset 3px 3px 6px #cfd7e3, inset -3px -3px 6px #ffffff;
+            color: #2b6cb0;
+            background: #e6fffa;
+            border-color: rgba(43, 108, 176, 0.2);
+        }
+
+        .results-section {
+            min-height: 200px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .version-count {
+            font-size: 12px;
+            background: #2b6cb0;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .version-card {
+            background: #f0f3f7;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            box-shadow: 4px 4px 8px #d1d9e6, -4px -4px 8px #ffffff;
+            border: 1px solid rgba(255,255,255,0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .version-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 6px 6px 12px #c2cbdc, -6px -6px 12px #ffffff;
+            background: #ffffff;
+            color: #2b6cb0;
+        }
+
+        .version-card:active {
+            transform: translateY(0);
+            box-shadow: inset 2px 2px 5px #d1d9e6, inset -2px -2px 5px #ffffff;
+        }
+
+        .version-card.copied-flash {
+            background: #cef7e4 !important;
+            border-color: #a3e2c1 !important;
+            color: #1c7447 !important;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            background: #2d3748;
+            color: #ffffff;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(100px);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>WhatsApp Version Engine</h1>
+            <p>Select a Chrome version to view and copy corresponding WhatsApp builds</p>
+        </header>
+
+        <div class="filter-section">
+            <div class="button-grid" id="buttonGrid"></div>
+        </div>
+
+        <div class="results-section">
+            <div class="section-title">
+                <span id="currentSelectionTitle">Select a Chrome Version</span>
+                <span class="version-count" id="versionCount" style="display: none;">0 Items</span>
+            </div>
+            <div class="version-grid" id="versionGrid">
+                <div class="empty-state"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toastNotification">Version copied to clipboard!</div>
+
+    <script>
+        // ඔයා දීපු JSON data එක Chrome major versions වලට map කරලා තියෙන්නේ මෙතනින්
+        const whatsappVersionsData = {
+            "126": ["2.26.10.74", "2.26.11.73", "2.26.11.74", "2.26.12.10", "2.26.12.4", "2.26.12.70", "2.26.12.71", "2.26.12.72", "2.26.12.73", "2.26.12.8", "2.26.12.9"],
+            "127": ["2.26.13.1", "2.26.13.12", "2.26.13.2", "2.26.13.3", "2.26.13.4", "2.26.13.5", "2.26.13.71", "2.26.13.72", "2.26.13.73", "2.26.13.74"],
+            "128": ["2.26.14.1", "2.26.14.10", "2.26.14.4", "2.26.14.5", "2.26.14.7", "2.26.14.70", "2.26.14.71", "2.26.14.74", "2.26.14.75", "2.26.14.78", "2.26.14.79", "2.26.14.8", "2.26.14.9"],
+            "129": ["2.26.15.1", "2.26.15.10", "2.26.15.11", "2.26.15.2", "2.26.15.6", "2.26.15.7", "2.26.15.70", "2.26.15.72", "2.26.15.73", "2.26.15.76", "2.26.15.8", "2.26.15.9"],
+            "130": ["2.26.16.1", "2.26.16.5", "2.26.16.7", "2.26.16.72", "2.26.16.73", "2.26.16.8"],
+            "131": ["2.26.17.1", "2.26.17.10", "2.26.17.2", "2.26.17.6", "2.26.17.7", "2.26.17.72", "2.26.17.73", "2.26.17.8", "2.26.17.9"],
+            "132": ["2.26.18.1", "2.26.18.3", "2.26.18.4", "2.26.18.5", "2.26.18.7", "2.26.18.70", "2.26.18.71", "2.26.18.72", "2.26.18.73", "2.26.18.74", "2.26.18.8", "2.26.18.9"],
+            "133": ["2.26.19.1", "2.26.19.11", "2.26.19.2", "2.26.19.3", "2.26.19.4", "2.26.19.70", "2.26.19.73", "2.26.19.74", "2.26.19.8", "2.26.19.9"],
+            "134": ["2.26.20.2", "2.26.20.5", "2.26.20.6", "2.26.20.7", "2.26.20.70", "2.26.20.71", "2.26.20.72", "2.26.20.73", "2.26.20.8"],
+            "135": ["2.26.21.10", "2.26.21.3", "2.26.21.7", "2.26.21.72", "2.26.21.73", "2.26.21.75", "2.26.21.76", "2.26.21.8", "2.26.21.9"],
+            "136": ["2.26.22.2", "2.26.22.5", "2.26.22.6", "2.26.22.7", "2.26.22.70", "2.26.22.71", "2.26.22.74", "2.26.22.75", "2.26.22.76", "2.26.22.77", "2.26.22.78", "2.26.22.8"],
+            "137": ["2.26.23.10", "2.26.23.2", "2.26.23.6", "2.26.23.7", "2.26.23.70", "2.26.23.71", "2.26.23.73", "2.26.23.74", "2.26.23.75", "2.26.23.8", "2.26.23.9"],
+            "138": ["2.26.24.1", "2.26.24.2", "2.26.24.4", "2.26.24.5", "2.26.24.70", "2.26.24.73", "2.26.24.76", "2.26.24.77"],
+            "139": ["2.26.25.1"]
+        };
+
+        const buttonGrid = document.getElementById('buttonGrid');
+        const versionGrid = document.getElementById('versionGrid');
+        const currentSelectionTitle = document.getElementById('currentSelectionTitle');
+        const versionCount = document.getElementById('versionCount');
+        const toast = document.getElementById('toastNotification');
+
+        // ලොකුම Chrome version එකේ ඉඳන් පොඩි එකට (DESC) buttons හදනවා
+        const sortedMajors = Object.keys(whatsappVersionsData).sort((a, b) => b - a);
+        
+        sortedMajors.forEach(major => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-3d';
+            btn.textContent = `v${major}`;
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-3d').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                displayVersions(major);
+            });
+            buttonGrid.appendChild(btn);
+        });
+
+        function displayVersions(majorKey) {
+            versionGrid.innerHTML = '';
+            const list = whatsappVersionsData[majorKey] || [];
+            
+            currentSelectionTitle.textContent = `WhatsApp Versions for Chrome v${majorKey}`;
+            versionCount.textContent = `${list.length} Builds`;
+            versionCount.style.display = 'inline-block';
+
+            if(list.length === 0) {
+                versionGrid.innerHTML = '<div class="empty-state">No WhatsApp versions found for this release.</div>';
+                return;
+            }
+
+            list.forEach(versionStr => {
+                const card = document.createElement('div');
+                card.className = 'version-card';
+                card.textContent = versionStr;
+                
+                card.addEventListener('click', () => {
+                    navigator.clipboard.writeText(versionStr).then(() => {
+                        showToast(`Copied: ${versionStr}`);
+                        card.classList.add('copied-flash');
+                        setTimeout(() => card.classList.remove('copied-flash'), 400);
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                    });
+                });
+
+                versionGrid.appendChild(card);
+            });
+        }
+
+        let toastTimeout;
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
